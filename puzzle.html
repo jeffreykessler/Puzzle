@@ -1,0 +1,1984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML5 Jigsaw Puzzle Game</title>
+    <style>
+        :root {
+            --color-white: rgba(255, 255, 255, 1);
+            --color-black: rgba(0, 0, 0, 1);
+            --color-cream-50: rgba(252, 252, 249, 1);
+            --color-cream-100: rgba(255, 255, 253, 1);
+            --color-gray-200: rgba(245, 245, 245, 1);
+            --color-gray-300: rgba(167, 169, 169, 1);
+            --color-gray-400: rgba(119, 124, 124, 1);
+            --color-slate-500: rgba(98, 108, 113, 1);
+            --color-brown-600: rgba(94, 82, 64, 1);
+            --color-charcoal-700: rgba(31, 33, 33, 1);
+            --color-charcoal-800: rgba(38, 40, 40, 1);
+            --color-slate-900: rgba(19, 52, 59, 1);
+            --color-teal-300: rgba(50, 184, 198, 1);
+            --color-teal-400: rgba(45, 166, 178, 1);
+            --color-teal-500: rgba(33, 128, 141, 1);
+            --color-teal-600: rgba(29, 116, 128, 1);
+            --color-teal-700: rgba(26, 104, 115, 1);
+            --color-brown-600-rgb: 94, 82, 64;
+            --color-teal-500-rgb: 33, 128, 141;
+            --color-slate-900-rgb: 19, 52, 59;
+            --color-background: var(--color-cream-50);
+            --color-surface: var(--color-cream-100);
+            --color-text: var(--color-slate-900);
+            --color-text-secondary: var(--color-slate-500);
+            --color-primary: var(--color-teal-500);
+            --color-primary-hover: var(--color-teal-600);
+            --color-primary-active: var(--color-teal-700);
+            --color-secondary: rgba(var(--color-brown-600-rgb), 0.12);
+            --color-border: rgba(var(--color-brown-600-rgb), 0.2);
+            --color-btn-primary-text: var(--color-cream-50);
+            --font-family-base: 'FKGroteskNeue', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-size-base: 14px;
+            --font-size-lg: 16px;
+            --font-size-xl: 18px;
+            --font-size-2xl: 20px;
+            --font-size-3xl: 24px;
+            --font-size-4xl: 30px;
+            --font-weight-medium: 500;
+            --font-weight-semibold: 550;
+            --font-weight-bold: 600;
+            --space-8: 8px;
+            --space-12: 12px;
+            --space-16: 16px;
+            --space-20: 20px;
+            --space-24: 24px;
+            --space-32: 32px;
+            --radius-base: 8px;
+            --radius-lg: 12px;
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-gray-400-rgb: 119, 124, 124;
+                --color-teal-300-rgb: 50, 184, 198;
+                --color-gray-300-rgb: 167, 169, 169;
+                --color-gray-200-rgb: 245, 245, 245;
+                --color-background: var(--color-charcoal-700);
+                --color-surface: var(--color-charcoal-800);
+                --color-text: var(--color-gray-200);
+                --color-text-secondary: rgba(var(--color-gray-300-rgb), 0.7);
+                --color-primary: var(--color-teal-300);
+                --color-primary-hover: var(--color-teal-400);
+                --color-secondary: rgba(var(--color-gray-400-rgb), 0.15);
+                --color-border: rgba(var(--color-gray-400-rgb), 0.3);
+                --color-btn-primary-text: var(--color-slate-900);
+            }
+        }
+
+        @font-face {
+            font-family: 'FKGroteskNeue';
+            src: url('https://r2cdn.perplexity.ai/fonts/FKGroteskNeue.woff2') format('woff2');
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family-base);
+            background-color: var(--color-background);
+            color: var(--color-text);
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--space-24);
+        }
+
+        .container.setup-container {
+            padding: var(--space-24);
+        }
+
+        .container.game-container {
+            padding: 0;
+            max-width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            font-size: var(--font-size-4xl);
+            font-weight: var(--font-weight-bold);
+            margin-bottom: var(--space-32);
+            text-align: center;
+        }
+
+        .setup-screen, .game-screen, .completion-screen {
+            display: none;
+        }
+
+        .setup-screen.active, .game-screen.active, .completion-screen.active {
+            display: block;
+        }
+
+        .setup-card {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-32);
+            max-width: 600px;
+            margin: 0 auto;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .form-group {
+            margin-bottom: var(--space-24);
+        }
+
+        label {
+            display: block;
+            font-weight: var(--font-weight-semibold);
+            margin-bottom: var(--space-8);
+            font-size: var(--font-size-lg);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: var(--space-12);
+            border: 2px dashed var(--color-border);
+            border-radius: var(--radius-base);
+            cursor: pointer;
+            font-size: var(--font-size-base);
+            background: var(--color-background);
+            color: var(--color-text);
+        }
+
+        input[type="file"]:hover {
+            border-color: var(--color-primary);
+        }
+
+        .image-preview {
+            margin-top: var(--space-16);
+            text-align: center;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: var(--radius-base);
+            box-shadow: var(--shadow-md);
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: var(--space-16);
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--color-secondary);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-value {
+            font-size: var(--font-size-xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-primary);
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: var(--space-12) var(--space-32);
+            background: var(--color-primary);
+            color: var(--color-btn-primary-text);
+            border: none;
+            border-radius: var(--radius-base);
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: var(--color-secondary);
+            color: var(--color-text);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(var(--color-brown-600-rgb), 0.2);
+        }
+
+        .game-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-16) var(--space-24);
+            gap: var(--space-16);
+            flex-wrap: wrap;
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--color-border);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            min-height: 80px;
+        }
+
+        .timer {
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-primary);
+        }
+
+        .progress {
+            font-size: var(--font-size-lg);
+            color: var(--color-text-secondary);
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: var(--space-12);
+            align-items: center; /* Align all controls vertically */
+        }
+
+        .control-buttons .btn {
+            width: auto;
+            padding: var(--space-8) var(--space-20);
+            font-size: var(--font-size-base);
+        }
+
+        .game-area {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--space-24);
+        }
+
+        @media (min-width: 1024px) {
+            .game-area {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        .board-container {
+            position: fixed;
+            top: 80px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: auto;
+            /* **** DEFAULT BACKGROUND CHANGE **** */
+            background: #FFFFFF; /* Default is now white */
+        }
+
+        .puzzle-board {
+            position: relative;
+            transform-origin: top left;
+            transition: transform 0.2s ease;
+        }
+
+        .puzzle-canvas {
+            display: block;
+            cursor: move;
+            /* Prevent touch actions like scrolling on the canvas itself */
+            touch-action: none;
+        }
+
+        .zoom-control {
+            display: flex;
+            align-items: center;
+            gap: var(--space-8);
+        }
+
+        .zoom-control label {
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-medium);
+            margin: 0;
+        }
+
+        .zoom-control input[type="range"] {
+            width: 150px;
+        }
+
+        /* Style for the new background dropdown */
+        .bg-select {
+            background: var(--color-background);
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-base);
+            padding: var(--space-8);
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-medium);
+            cursor: pointer;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            padding-right: var(--space-32); /* Make space for an arrow */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd' /%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right var(--space-8) center;
+            background-size: 1.25em 1.25em;
+        }
+        .bg-select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+
+        .zoom-value {
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-primary);
+            min-width: 50px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            cursor: pointer;
+        }
+
+        .modal-content {
+            position: relative;
+            background: var(--color-surface);
+            padding: var(--space-32);
+            border-radius: var(--radius-lg);
+            max-width: 90%;
+            max-height: 90%;
+            box-shadow: var(--shadow-lg);
+            z-index: 1001;
+        }
+
+        .modal-content img {
+            max-width: 100%;
+            max-height: 70vh;
+            display: block;
+            border-radius: var(--radius-base);
+        }
+
+        .close-button {
+            margin-top: var(--space-16);
+            padding: var(--space-8) var(--space-24);
+            background: var(--color-primary);
+            color: var(--color-btn-primary-text);
+            border: none;
+            border-radius: var(--radius-base);
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-semibold);
+            cursor: pointer;
+        }
+
+        .close-button:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .completion-screen {
+            text-align: center;
+        }
+
+        .completion-card {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-32);
+            max-width: 600px;
+            margin: 0 auto;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .completion-card h2 {
+            font-size: var(--font-size-4xl);
+            color: var(--color-primary);
+            margin-bottom: var(--space-24);
+        }
+
+        .final-time {
+            font-size: var(--font-size-3xl);
+            font-weight: var(--font-weight-bold);
+            margin: var(--space-24) 0;
+        }
+
+        .completion-image {
+            margin: var(--space-24) 0;
+        }
+
+        .completion-image img {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: var(--radius-base);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .pause-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .pause-overlay.active {
+            display: flex;
+        }
+
+        .pause-message {
+            color: white;
+            font-size: var(--font-size-4xl);
+            font-weight: var(--font-weight-bold);
+        }
+
+        .preview-thumbnail {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 50;
+            background: var(--color-surface);
+            padding: var(--space-8);
+            border-radius: var(--radius-base);
+            box-shadow: var(--shadow-lg);
+            border: 2px solid var(--color-border);
+            display: none;
+        }
+
+        .preview-thumbnail.active {
+            display: block;
+        }
+
+        .preview-thumbnail img {
+            display: block;
+            max-width: 180px;
+            border-radius: var(--radius-base);
+        }
+
+        .preview-thumbnail .label {
+            text-align: center;
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text-secondary);
+            margin-top: var(--space-4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container setup-container" id="mainContainer">
+        <h1>🧩 Jigsaw Puzzle Game</h1>
+
+        <div class="setup-screen active" id="setupScreen">
+            <div class="setup-card">
+                <div class="form-group">
+                    <label for="imageUpload">Upload Your Image</label>
+                    <input type="file" id="imageUpload" accept="image/jpeg,image/jpg,image/png,image/bmp,image/gif">
+                    <div class="image-preview" id="imagePreview"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="pieceSlider">Number of Puzzle Pieces</label>
+                    <div class="slider-container">
+                        <input type="range" id="pieceSlider" min="50" max="300" step="25" value="100">
+                        <span class="slider-value" id="sliderValue">100</span>
+                    </div>
+                </div>
+
+                <button class="btn" id="startBtn" disabled>Start Puzzle</button>
+            </div>
+        </div>
+
+        <div class="game-screen" id="gameScreen">
+            <div class="game-controls">
+                <div class="timer" id="timer">00:00</div>
+                <div class="progress" id="progress">0 / 0 pieces connected</div>
+                <div class="control-buttons">
+                    <button class="btn btn-secondary" id="previewBtn">Show Preview</button>
+                    <div class="zoom-control">
+                        <label>Zoom:</label>
+                        <input type="range" id="zoomSlider" min="10" max="200" step="10" value="100">
+                        <span class="zoom-value" id="zoomValue">100%</span>
+                    </div>
+                    
+                    <!-- **** BACKGROUND DROPDOWN **** -->
+                    <div class="zoom-control"> <!-- Re-using class for layout -->
+                        <label for="bgSelect">BG:</label>
+                        <select id="bgSelect" class="bg-select">
+                            <!-- **** DEFAULT BACKGROUND CHANGE **** -->
+                            <option value="#FFFFFF">Default White</option> <!-- Default is now White -->
+                            <option value="#F5F5F5">Light Gray</option>
+                            <option value="#A9A9A9">Medium Gray</option>
+                            <option value="#696969">Dark Gray</option>
+                            <option value="#333333">Charcoal</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn btn-secondary" id="pauseBtn">Pause</button>
+                    <button class="btn btn-secondary" id="newGameBtn">New Game</button>
+                </div>
+            </div>
+
+            <div class="game-area">
+                <div class="board-container">
+                    <div class="puzzle-board" id="puzzleBoard">
+                        <canvas id="puzzleCanvas"></canvas>
+                    </div>
+                    <div class="pause-overlay" id="pauseOverlay">
+                        <div class="pause-message">PAUSED</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="previewModal">
+            <div class="modal-backdrop" id="modalBackdrop"></div>
+            <div class="modal-content">
+                <img id="previewImage" src="" alt="Puzzle Preview">
+                <button class="close-button" id="closeModal">Close</button>
+            </div>
+        </div>
+
+        <div class="preview-thumbnail" id="previewThumbnail">
+            <img id="thumbnailImage" src="" alt="Puzzle Reference">
+            <div class="label">Reference</div>
+        </div>
+
+        <div class="completion-screen" id="completionScreen">
+            <div class="completion-card">
+                <h2>🎉 Congratulations!</h2>
+                <p style="font-size: var(--font-size-xl); margin-bottom: var(--space-16);">You completed the puzzle!</p>
+                <div class="final-time">
+                    Time: <span id="finalTime">00:00</span>
+                </div>
+                <div class="completion-image" id="completionImage"></div>
+                <button class="btn" id="playAgainBtn">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let gameState = 'setup';
+        let uploadedImage = null;
+        let numPieces = 100; // This is the *requested* number
+        let gridCols = 10;
+        let gridRows = 10;
+        let pieces = [];
+        let groups = [];
+        let draggedGroup = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+        let timerInterval = null;
+        let startTime = 0;
+        let elapsedTime = 0;
+        let isPaused = false;
+        let zoomLevel = 1.0;
+        let connectedPiecesCount = 0;
+        let totalPieces = 0; // This will be the *actual* number (gridCols * gridRows)
+        
+        // Audio context for sound effects
+        let audioContext = null;
+        
+        // Edge offsets for consistent tab/cup positioning
+        let edgeOffsets = { horizontal: [], vertical: [] };
+
+        // Canvas elements
+        const puzzleCanvas = document.getElementById('puzzleCanvas');
+        const puzzleCtx = puzzleCanvas.getContext('2d');
+
+        // Constants
+        // const SNAP_THRESHOLD = 45; // This is now dynamic
+        const TAB_SIZE = 0.2; // 20% of piece size for rounded tabs
+        const TAB_RADIUS = 0.15; // Controls the roundedness of tabs
+        
+        // Board dimensions
+        let boardWidth = 0;
+        let boardHeight = 0;
+        let puzzleWidth = 0;
+        let puzzleHeight = 0;
+        let pieceWidth = 0;
+        let pieceHeight = 0;
+        
+        // Performance optimization
+        let needsRedraw = false;
+        let pieceImageCache = new Map();
+        let lastMouseTime = 0;
+        const mouseThrottle = 16; // ~60fps
+        
+        // Pan feature
+        let isPanning = false;
+        let panStartX = 0;
+        let panStartY = 0;
+        let panScrollStartX = 0;
+        let panScrollStartY = 0;
+
+        // Initialize audio on first user interaction
+        function initAudio() {
+            if (!audioContext) {
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    console.log('Audio context initialized');
+                } catch (e) {
+                    console.error('Web Audio API not supported', e);
+                }
+            }
+        }
+        
+        // Initialize audio on first click or touch
+        const initAudioOnInteraction = () => initAudio();
+        document.addEventListener('click', initAudioOnInteraction, { once: true });
+        document.addEventListener('touchstart', initAudioOnInteraction, { once: true });
+        
+        // Setup event listeners
+        document.getElementById('imageUpload').addEventListener('change', handleImageUpload);
+        document.getElementById('pieceSlider').addEventListener('input', handleSliderChange);
+        document.getElementById('startBtn').addEventListener('click', startPuzzle);
+        document.getElementById('pauseBtn').addEventListener('click', togglePause);
+        document.getElementById('newGameBtn').addEventListener('click', resetGame);
+        document.getElementById('playAgainBtn').addEventListener('click', resetGame);
+        document.getElementById('zoomSlider').addEventListener('input', handleZoomChange);
+        document.getElementById('previewBtn').addEventListener('click', showPreview);
+        document.getElementById('closeModal').addEventListener('click', closePreview);
+        document.getElementById('modalBackdrop').addEventListener('click', closePreview);
+        window.addEventListener('resize', handleWindowResize);
+        
+        // **** BACKGROUND EVENT LISTENER ****
+        document.getElementById('bgSelect').addEventListener('change', handleBackgroundChange);
+
+        // Handle image upload
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    uploadedImage = img;
+                    displayImagePreview(img);
+                    document.getElementById('startBtn').disabled = false;
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Display image preview
+        function displayImagePreview(img) {
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = '';
+            const previewImg = document.createElement('img');
+            previewImg.src = img.src;
+            preview.appendChild(previewImg);
+        }
+
+        // Handle slider change
+        function handleSliderChange(e) {
+            numPieces = parseInt(e.target.value); // This is the user's *target*
+            document.getElementById('sliderValue').textContent = numPieces;
+        }
+
+        // Calculate grid dimensions
+        function calculateGridDimensions(totalPieces) {
+            // Try to make as square as possible
+            const sqrt = Math.sqrt(totalPieces);
+            gridCols = Math.round(sqrt);
+            gridRows = Math.round(totalPieces / gridCols);
+            
+            // Adjust to ensure we have *at least* the requested number of pieces
+            // This ensures the full grid is created
+            while (gridCols * gridRows < totalPieces) {
+                gridRows++;
+            }
+            // The actual number of pieces will be gridCols * gridRows
+        }
+
+        // Start puzzle
+        function startPuzzle() {
+            gameState = 'playing';
+            calculateGridDimensions(numPieces);
+            
+            // Switch container class for game layout
+            const container = document.getElementById('mainContainer');
+            container.classList.remove('setup-container');
+            container.classList.add('game-container');
+            
+            // Switch screens
+            document.getElementById('setupScreen').classList.remove('active');
+            document.getElementById('gameScreen').classList.add('active');
+            
+            // Setup canvases
+            setupCanvases();
+            
+            // Generate pieces
+            generatePieces();
+            
+            // Start timer
+            startTimer();
+            
+            // Update progress
+            updateProgress();
+        }
+
+        // Setup canvases with infinite board
+        function setupCanvases() {
+            const maxWidth = 800;
+            const maxHeight = 600;
+            
+            let scale = Math.min(
+                maxWidth / uploadedImage.width,
+                maxHeight / uploadedImage.height,
+                1
+            );
+            
+            puzzleWidth = uploadedImage.width * scale;
+            puzzleHeight = uploadedImage.height * scale;
+            
+            // Calculate board dimensions based on viewport
+            calculateBoardDimensions();
+            
+            // Show preview thumbnail
+            const thumbnail = document.getElementById('previewThumbnail');
+            const thumbnailImg = document.getElementById('thumbnailImage');
+            thumbnailImg.src = uploadedImage.src;
+            thumbnail.classList.add('active');
+        }
+        
+        // Calculate board dimensions for infinite feel
+        function calculateBoardDimensions() {
+            const container = document.querySelector('.board-container');
+            const viewportWidth = container.clientWidth;
+            const viewportHeight = container.clientHeight;
+            
+            // Board should be larger than viewport for infinite feel
+            // Use 5x multiplier and ensure minimum 5000x5000 for performance
+            const BOARD_SIZE_MULTIPLIER = 5;
+            const minSize = 5000;
+            
+            boardWidth = Math.max(minSize, viewportWidth * BOARD_SIZE_MULTIPLIER, puzzleWidth * BOARD_SIZE_MULTIPLIER);
+            boardHeight = Math.max(minSize, viewportHeight * BOARD_SIZE_MULTIPLIER, puzzleHeight * BOARD_SIZE_MULTIPLIER);
+            
+            // When zoomed, ensure canvas is large enough
+            if (zoomLevel > 1) {
+                boardWidth = Math.max(boardWidth, boardWidth * zoomLevel);
+                boardHeight = Math.max(boardHeight, boardHeight * zoomLevel);
+            }
+            
+            puzzleCanvas.width = boardWidth;
+            puzzleCanvas.height = boardHeight;
+        }
+        
+        // Handle window resize
+        function handleWindowResize() {
+            if (gameState !== 'playing' || !uploadedImage) return;
+            
+            // Recalculate board dimensions
+            calculateBoardDimensions();
+            
+            // Recache pieces and redraw
+            if (pieces.length > 0) {
+                cachePieceImages();
+            }
+            requestRedraw();
+        }
+
+        // Generate shared edge offsets for consistent tab/cup positioning
+        function generateEdgeOffsets(rows, cols) {
+            const offsets = {
+                horizontal: [], // offsets for horizontal edges (between rows)
+                vertical: []    // offsets for vertical edges (between cols)
+            };
+            
+            // Horizontal edges (between pieces in adjacent rows)
+            for (let row = 0; row < rows - 1; row++) {
+                offsets.horizontal[row] = [];
+                for (let col = 0; col < cols; col++) {
+                    // Random offset: -0.25 to +0.25 (as fraction of piece width)
+                    offsets.horizontal[row][col] = -0.25 + Math.random() * 0.5;
+                }
+            }
+            
+            // Vertical edges (between pieces in adjacent columns)
+            for (let row = 0; row < rows; row++) {
+                offsets.vertical[row] = [];
+                for (let col = 0; col < cols - 1; col++) {
+                    // Random offset: -0.25 to +0.25 (as fraction of piece height)
+                    offsets.vertical[row][col] = -0.25 + Math.random() * 0.5;
+                }
+            }
+            
+            return offsets;
+        }
+        
+        // Get tab offset for a specific piece edge
+        function getPieceTabOffset(piece, edge) {
+            const { correctRow, correctCol } = piece;
+            
+            switch(edge) {
+                case 'top':
+                    // Uses horizontal edge above this piece
+                    if (correctRow === 0) return 0;
+                    return edgeOffsets.horizontal[correctRow - 1][correctCol];
+                    
+                case 'bottom':
+                    // Uses horizontal edge below this piece
+                    if (correctRow === gridRows - 1) return 0;
+                    return edgeOffsets.horizontal[correctRow][correctCol];
+                    
+                case 'left':
+                    // Uses vertical edge to left of this piece
+                    if (correctCol === 0) return 0;
+                    return edgeOffsets.vertical[correctRow][correctCol - 1];
+                    
+                case 'right':
+                    // Uses vertical edge to right of this piece
+                    if (correctCol === gridCols - 1) return 0;
+                    return edgeOffsets.vertical[correctRow][correctCol];
+            }
+            return 0;
+        }
+        
+        // Generate puzzle pieces
+        function generatePieces() {
+            pieces = [];
+            groups = [];
+            
+            pieceWidth = puzzleWidth / gridCols;
+            pieceHeight = puzzleHeight / gridRows;
+            
+            // Generate edge offsets for consistent positioning
+            edgeOffsets = generateEdgeOffsets(gridRows, gridCols);
+            
+            // Generate tab patterns (random tabs/cups for each edge)
+            const tabPattern = [];
+            
+            for (let row = 0; row < gridRows; row++) {
+                tabPattern[row] = [];
+                for (let col = 0; col < gridCols; col++) {
+                    tabPattern[row][col] = {
+                        top: row === 0 ? 0 : (Math.random() > 0.5 ? 1 : -1),
+                        right: col === gridCols - 1 ? 0 : (Math.random() > 0.5 ? 1 : -1),
+                        bottom: row === gridRows - 1 ? 0 : (Math.random() > 0.5 ? 1 : -1),
+                        left: col === 0 ? 0 : (Math.random() > 0.5 ? 1 : -1)
+                    };
+                    
+                    // Ensure adjacent pieces match (opposite tab/cup)
+                    if (row > 0) {
+                        tabPattern[row][col].top = -tabPattern[row - 1][col].bottom;
+                    }
+                    if (col > 0) {
+                        tabPattern[row][col].left = -tabPattern[row][col - 1].right;
+                    }
+                }
+            }
+            
+            // --- LOGIC FIX START ---
+            // Create pieces for the *entire* grid (gridRows * gridCols)
+            // Do not break early based on `numPieces`
+            for (let row = 0; row < gridRows; row++) {
+                for (let col = 0; col < gridCols; col++) {
+                    // REMOVED: if (pieces.length >= numPieces) break;
+                    
+                    const piece = {
+                        id: pieces.length,
+                        correctCol: col,
+                        correctRow: row,
+                        correctX: col * pieceWidth + (boardWidth - puzzleWidth) / 2,
+                        correctY: row * pieceHeight + (boardHeight - puzzleHeight) / 2,
+                        currentX: 0,
+                        currentY: 0,
+                        width: pieceWidth,
+                        height: pieceHeight,
+                        tabs: tabPattern[row][col],
+                        groupId: pieces.length // Each piece starts in its own group
+                    };
+                    
+                    pieces.push(piece);
+                    groups.push({ id: piece.groupId, pieceIds: [piece.id] });
+                }
+                // REMOVED: if (pieces.length >= numPieces) break;
+            }
+            
+            // Set totalPieces to the *actual* number generated
+            totalPieces = pieces.length;
+            // --- LOGIC FIX END ---
+            
+            // Scatter pieces randomly on board
+            scatterPieces();
+            
+            // Initialize counter
+            connectedPiecesCount = 0;
+            updateCounter(); // Update UI with correct total
+            
+            // Cache piece images for performance
+            cachePieceImages();
+            
+            // Draw everything
+            requestRedraw();
+            
+            // Auto-center view on the piece cluster
+            // Use setTimeout to ensure DOM is fully updated
+            setTimeout(() => {
+                centerViewOnPieces();
+            }, 0);
+        }
+
+        // Calculate optimal cluster radius based on viewport dimensions
+        function calculateClusterRadius() {
+            const boardContainer = document.querySelector('.board-container');
+            const controlsHeight = document.querySelector('.game-controls').offsetHeight;
+            
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight - controlsHeight;
+            
+            // Cluster should fit in ~60% of smaller viewport dimension to leave working space
+            const maxClusterDimension = Math.min(viewportWidth, viewportHeight) * 0.6;
+            
+            // Cluster radius is half the max dimension
+            const clusterRadius = maxClusterDimension / 2;
+            
+            return clusterRadius;
+        }
+
+        // Scatter pieces randomly in a cluster near the center with viewport-aware sizing
+        function scatterPieces() {
+            const centerX = boardWidth / 2;
+            const centerY = boardHeight / 2;
+            
+            // Calculate cluster radius based on viewport size
+            const clusterRadius = calculateClusterRadius();
+            
+            pieces.forEach(piece => {
+                // Random angle and distance from center
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * clusterRadius;
+                
+                // Position within cluster
+                piece.currentX = centerX + Math.cos(angle) * distance - piece.width / 2;
+                piece.currentY = centerY + Math.sin(angle) * distance - piece.height / 2;
+            });
+        }
+        
+        // Auto-scroll viewport to center on the piece cluster
+        function centerViewOnPieces() {
+            const boardContainer = document.querySelector('.board-container');
+            const centerX = boardWidth / 2;
+            const centerY = boardHeight / 2;
+            
+            // Calculate scroll position to center the pieces in viewport
+            const scrollLeft = centerX - (boardContainer.clientWidth / 2);
+            const scrollTop = centerY - (boardContainer.clientHeight / 2);
+            
+            // Scroll to center instantly (no animation for immediate visibility)
+            boardContainer.scrollTo({
+                left: scrollLeft,
+                top: scrollTop,
+                behavior: 'instant'
+            });
+        }
+
+        // Request redraw using requestAnimationFrame
+        function requestRedraw() {
+            if (!needsRedraw) {
+                needsRedraw = true;
+                requestAnimationFrame(drawPuzzle);
+            }
+        }
+        
+        // Cache piece images for performance
+        function cachePieceImages() {
+            pieceImageCache.clear();
+            pieces.forEach(piece => {
+                cachePieceImage(piece);
+            });
+        }
+        
+        function cachePieceImage(piece) {
+            const tabMargin = Math.min(piece.width, piece.height) * TAB_SIZE;
+            const offscreen = document.createElement('canvas');
+            offscreen.width = piece.width + (tabMargin * 2);
+            offscreen.height = piece.height + (tabMargin * 2);
+            const ctx = offscreen.getContext('2d');
+            
+            // Create piece path
+            ctx.save();
+            createJigsawPathOnContext(ctx, piece, tabMargin, tabMargin);
+            ctx.clip();
+            
+            // Draw image on cached canvas
+            const srcPieceWidth = uploadedImage.width / gridCols;
+            const srcPieceHeight = uploadedImage.height / gridRows;
+            const srcX = piece.correctCol * srcPieceWidth - tabMargin;
+            const srcY = piece.correctRow * srcPieceHeight - tabMargin;
+            const srcWidth = srcPieceWidth + (tabMargin * 2);
+            const srcHeight = srcPieceHeight + (tabMargin * 2);
+            
+            ctx.drawImage(
+                uploadedImage,
+                Math.max(0, srcX), Math.max(0, srcY),
+                Math.min(srcWidth, uploadedImage.width - Math.max(0, srcX)),
+                Math.min(srcHeight, uploadedImage.height - Math.max(0, srcY)),
+                0, 0, offscreen.width, offscreen.height
+            );
+            
+            ctx.restore();
+            
+            // --- SHADOWS REMOVED ---
+            // Draw a simple, performant border
+            ctx.save();
+            createJigsawPathOnContext(ctx, piece, tabMargin, tabMargin);
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)'; // Keep the main dark border
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+            ctx.restore();
+            // --- END OF BORDER ---
+            
+            // Store in cache
+            pieceImageCache.set(piece.id, offscreen);
+        }
+        
+        // Draw puzzle board with subtle texture
+        function drawPuzzle() {
+            needsRedraw = false;
+            // **** BACKGROUND FIX: Use clearRect ****
+            // Clear the canvas transparently instead of filling
+            puzzleCtx.clearRect(0, 0, boardWidth, boardHeight);
+            
+            // Optional: Draw subtle grid for reference (comment out if not needed)
+            // drawReferenceGrid();
+            
+            // Sort pieces by group size (smaller groups first, so larger connected groups render on top)
+            const sortedPieces = [...pieces].sort((a, b) => {
+                const groupA = groups.find(g => g.pieceIds.includes(a.id));
+                const groupB = groups.find(g => g.pieceIds.includes(b.id));
+                const sizeA = groupA ? groupA.pieceIds.length : 1;
+                const sizeB = groupB ? groupB.pieceIds.length : 1;
+                return sizeA - sizeB;
+            });
+            
+            // Draw all pieces using cached images (non-dragged first)
+            sortedPieces.forEach(piece => {
+                if (draggedGroup && draggedGroup.pieceIds.includes(piece.id)) return;
+                drawCachedPiece(piece, piece.currentX, piece.currentY);
+            });
+            
+            // Draw dragged group on top
+            if (draggedGroup) {
+                draggedGroup.pieceIds.forEach(pieceId => {
+                    const piece = pieces.find(p => p.id === pieceId);
+                    drawCachedPiece(piece, piece.currentX, piece.currentY);
+                });
+            }
+        }
+
+        // Draw cached piece (much faster)
+        function drawCachedPiece(piece, x, y) {
+            const cached = pieceImageCache.get(piece.id);
+            if (cached) {
+                const tabMargin = Math.min(piece.width, piece.height) * TAB_SIZE;
+                puzzleCtx.drawImage(cached, x - tabMargin, y - tabMargin);
+            } else {
+                // Fallback to drawing piece directly
+                drawPiece(piece, x, y);
+            }
+        }
+        
+        // Draw a single jigsaw piece with rounded tabs (fallback)
+        function drawPiece(piece, x, y) {
+            puzzleCtx.save();
+            
+            // Create jigsaw piece path with very rounded tabs
+            createJigsawPath(piece, x, y);
+            
+            // Clip to piece shape
+            puzzleCtx.clip();
+            
+            // Calculate source position WITH MARGIN FOR TABS/CUPS
+            const tabMargin = Math.min(piece.width, piece.height) * TAB_SIZE;
+            
+            const srcPieceWidth = uploadedImage.width / gridCols;
+            const srcPieceHeight = uploadedImage.height / gridRows;
+            
+            // Source coordinates - include extra margin for tabs
+            const srcX = piece.correctCol * srcPieceWidth - tabMargin;
+            const srcY = piece.correctRow * srcPieceHeight - tabMargin;
+            const srcWidth = srcPieceWidth + (tabMargin * 2);
+            const srcHeight = srcPieceHeight + (tabMargin * 2);
+            
+            // Destination coordinates - draw with tab margin
+            const destX = x - tabMargin;
+            const destY = y - tabMargin;
+            const destWidth = piece.width + (tabMargin * 2);
+            const destHeight = piece.height + (tabMargin * 2);
+            
+            // Draw the image portion on the ENTIRE piece shape including tabs/cups
+            puzzleCtx.drawImage(
+                uploadedImage,
+                Math.max(0, srcX), Math.max(0, srcY), 
+                Math.min(srcWidth, uploadedImage.width - Math.max(0, srcX)), 
+                Math.min(srcHeight, uploadedImage.height - Math.max(0, srcY)),
+                destX, destY, destWidth, destHeight
+            );
+            
+            puzzleCtx.restore();
+            
+            // --- SHADOWS REMOVED (fallback) ---
+            // Draw a simple, performant border
+            puzzleCtx.save();
+            createJigsawPath(piece, x, y);
+            puzzleCtx.strokeStyle = 'rgba(0, 0, 0, 0.7)'; // Keep the main dark border
+            puzzleCtx.lineWidth = 2.5;
+            puzzleCtx.stroke();
+            puzzleCtx.restore();
+            // --- END OF BORDER ---
+        }
+        
+        // Create jigsaw path on the main canvas context
+        function createJigsawPath(piece, x, y) {
+            createJigsawPathOnContext(puzzleCtx, piece, x, y);
+        }
+        
+        // Create authentic jigsaw piece path with consistent size, varied position
+        function createJigsawPathOnContext(ctx, piece, x, y) {
+            const { width, height, tabs } = piece;
+            const tabSize = Math.min(width, height) * TAB_SIZE; // CONSISTENT SIZE
+            const neckWidth = tabSize * 0.5; // Width of tab neck
+            
+            ctx.beginPath();
+            
+            // Start at top-left corner
+            ctx.moveTo(x, y);
+            
+            // Top edge with rounded tab/cup
+            if (tabs.top === 0) {
+                ctx.lineTo(x + width, y);
+            } else {
+                const offset = getPieceTabOffset(piece, 'top');
+                const midX = x + width * (0.5 + offset); // Position varies
+                const dir = tabs.top > 0 ? -1 : 1;
+                
+                ctx.lineTo(midX - neckWidth, y);
+                
+                ctx.bezierCurveTo(
+                    midX - neckWidth, y,
+                    midX - tabSize * 0.8, y + dir * tabSize * 0.3,
+                    midX - tabSize * 0.7, y + dir * tabSize * 0.6
+                );
+                ctx.bezierCurveTo(
+                    midX - tabSize * 0.5, y + dir * tabSize * 0.85,
+                    midX - tabSize * 0.2, y + dir * tabSize,
+                    midX, y + dir * tabSize
+                );
+                ctx.bezierCurveTo(
+                    midX + tabSize * 0.2, y + dir * tabSize,
+                    midX + tabSize * 0.5, y + dir * tabSize * 0.85,
+                    midX + tabSize * 0.7, y + dir * tabSize * 0.6
+                );
+                ctx.bezierCurveTo(
+                    midX + tabSize * 0.8, y + dir * tabSize * 0.3,
+                    midX + neckWidth, y,
+                    midX + neckWidth, y
+                );
+                
+                ctx.lineTo(x + width, y);
+            }
+            
+            // Right edge with rounded tab/cup
+            if (tabs.right === 0) {
+                ctx.lineTo(x + width, y + height);
+            } else {
+                const offset = getPieceTabOffset(piece, 'right');
+                const midY = y + height * (0.5 + offset); // Position varies
+                const dir = tabs.right > 0 ? 1 : -1;
+                
+                ctx.lineTo(x + width, midY - neckWidth);
+                
+                ctx.bezierCurveTo(
+                    x + width, midY - neckWidth,
+                    x + width + dir * tabSize * 0.3, midY - tabSize * 0.8,
+                    x + width + dir * tabSize * 0.6, midY - tabSize * 0.7
+                );
+                ctx.bezierCurveTo(
+                    x + width + dir * tabSize * 0.85, midY - tabSize * 0.5,
+                    x + width + dir * tabSize, midY - tabSize * 0.2,
+                    x + width + dir * tabSize, midY
+                );
+                ctx.bezierCurveTo(
+                    x + width + dir * tabSize, midY + tabSize * 0.2,
+                    x + width + dir * tabSize * 0.85, midY + tabSize * 0.5,
+                    x + width + dir * tabSize * 0.6, midY + tabSize * 0.7
+                );
+                ctx.bezierCurveTo(
+                    x + width + dir * tabSize * 0.3, midY + tabSize * 0.8,
+                    x + width, midY + neckWidth,
+                    x + width, midY + neckWidth
+                );
+                
+                ctx.lineTo(x + width, y + height);
+            }
+            
+            // Bottom edge with rounded tab/cup
+            if (tabs.bottom === 0) {
+                ctx.lineTo(x, y + height);
+            } else {
+                const offset = getPieceTabOffset(piece, 'bottom');
+                const midX = x + width * (0.5 + offset); // Position varies
+                const dir = tabs.bottom > 0 ? 1 : -1;
+                
+                ctx.lineTo(midX + neckWidth, y + height);
+                
+                ctx.bezierCurveTo(
+                    midX + neckWidth, y + height,
+                    midX + tabSize * 0.8, y + height + dir * tabSize * 0.3,
+                    midX + tabSize * 0.7, y + height + dir * tabSize * 0.6
+                );
+                ctx.bezierCurveTo(
+                    midX + tabSize * 0.5, y + height + dir * tabSize * 0.85,
+                    midX + tabSize * 0.2, y + height + dir * tabSize,
+                    midX, y + height + dir * tabSize
+                );
+                ctx.bezierCurveTo(
+                    midX - tabSize * 0.2, y + height + dir * tabSize,
+                    midX - tabSize * 0.5, y + height + dir * tabSize * 0.85,
+                    midX - tabSize * 0.7, y + height + dir * tabSize * 0.6
+                );
+                ctx.bezierCurveTo(
+                    midX - tabSize * 0.8, y + height + dir * tabSize * 0.3,
+                    midX - neckWidth, y + height,
+                    midX - neckWidth, y + height
+                );
+                
+                ctx.lineTo(x, y + height);
+            }
+            
+            // Left edge with rounded tab/cup
+            if (tabs.left === 0) {
+                ctx.lineTo(x, y);
+            } else {
+                const offset = getPieceTabOffset(piece, 'left');
+                const midY = y + height * (0.5 + offset); // Position varies
+                const dir = tabs.left > 0 ? -1 : 1;
+                
+                ctx.lineTo(x, midY + neckWidth);
+                
+                ctx.bezierCurveTo(
+                    x, midY + neckWidth,
+                    x + dir * tabSize * 0.3, midY + tabSize * 0.8,
+                    x + dir * tabSize * 0.6, midY + tabSize * 0.7
+                );
+                ctx.bezierCurveTo(
+                    x + dir * tabSize * 0.85, midY + tabSize * 0.5,
+                    x + dir * tabSize, midY + tabSize * 0.2,
+                    x + dir * tabSize, midY
+                );
+                ctx.bezierCurveTo(
+                    x + dir * tabSize, midY - tabSize * 0.2,
+                    x + dir * tabSize * 0.85, midY - tabSize * 0.5,
+                    x + dir * tabSize * 0.6, midY - tabSize * 0.7
+                );
+                ctx.bezierCurveTo(
+                    x + dir * tabSize * 0.3, midY - tabSize * 0.8,
+                    x, midY - neckWidth,
+                    x, midY - neckWidth
+                );
+                
+                ctx.lineTo(x, y);
+            }
+            
+            ctx.closePath();
+        }
+        
+
+
+        // --- MOUSE AND TOUCH EVENT HANDLERS ---
+        let mouseDown = false;
+
+        // Mouse events
+        puzzleCanvas.addEventListener('mousedown', handleMouseDown);
+        puzzleCanvas.addEventListener('mousemove', handleMouseMove);
+        puzzleCanvas.addEventListener('mouseup', handleMouseUp);
+        document.addEventListener('mouseup', handleMouseUp);
+        
+        // Touch events
+        // { passive: false } tells the browser we *will* call preventDefault()
+        puzzleCanvas.addEventListener('touchstart', handleMouseDown, { passive: false });
+        puzzleCanvas.addEventListener('touchmove', handleMouseMove, { passive: false });
+        puzzleCanvas.addEventListener('touchend', handleMouseUp);
+        puzzleCanvas.addEventListener('touchcancel', handleMouseUp);
+        document.addEventListener('touchend', handleMouseUp);
+        document.addEventListener('touchcancel', handleMouseUp);
+
+        // Universal coordinate getter for mouse and touch
+        function getEventCoords(e) {
+            if (e.touches && e.touches.length) {
+                // Primary touch
+                return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+            if (e.changedTouches && e.changedTouches.length) {
+                // For touchend/touchcancel
+                return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+            }
+            // Fallback for mouse events
+            return { x: e.clientX, y: e.clientY };
+        }
+
+        function handleMouseDown(e) {
+            if (isPaused || gameState !== 'playing') return;
+
+            // Prevent default scroll on touch
+            if (e.type === 'touchstart') {
+                e.preventDefault();
+            }
+            
+            // Get universal coordinates
+            const coords = getEventCoords(e);
+            
+            const rect = puzzleCanvas.getBoundingClientRect();
+            const boardContainer = document.querySelector('.board-container');
+            const x = (coords.x - rect.left) / zoomLevel;
+            const y = (coords.y - rect.top) / zoomLevel;
+            
+            // Find clicked piece
+            const clickedPiece = findPieceAtPosition(x, y);
+            
+            if (clickedPiece) {
+                // Start dragging piece
+                const group = groups.find(g => g.pieceIds.includes(clickedPiece.id));
+                if (group) {
+                    draggedGroup = group;
+                    dragOffsetX = x - clickedPiece.currentX;
+                    dragOffsetY = y - clickedPiece.currentY;
+                    mouseDown = true;
+                    puzzleCanvas.style.cursor = 'move';
+                }
+            } else {
+                // Start panning board (clicked on empty space)
+                isPanning = true;
+                panStartX = coords.x; // Use universal coord
+                panStartY = coords.y; // Use universal coord
+                panScrollStartX = boardContainer.scrollLeft;
+                panScrollStartY = boardContainer.scrollTop;
+                puzzleCanvas.style.cursor = 'grab';
+            }
+        }
+
+        function handleMouseMove(e) {
+            if (isPaused) return;
+
+            // Prevent default scroll on touch
+            if (e.type === 'touchmove') {
+                e.preventDefault();
+            }
+            
+            // Throttle mouse events for performance
+            const now = Date.now();
+            if (now - lastMouseTime < mouseThrottle && !isPanning && e.type !== 'touchmove') {
+                return;
+            }
+            lastMouseTime = now;
+            
+            // Get universal coordinates
+            const coords = getEventCoords(e);
+            
+            const boardContainer = document.querySelector('.board-container');
+            
+            if (isPanning) {
+                // Pan the board
+                const dx = panStartX - coords.x; // Use universal coord
+                const dy = panStartY - coords.y; // Use universal coord
+                
+                boardContainer.scrollLeft = panScrollStartX + dx;
+                boardContainer.scrollTop = panScrollStartY + dy;
+                
+                puzzleCanvas.style.cursor = 'grabbing';
+            } else if (mouseDown && draggedGroup) {
+                // Drag piece
+                const rect = puzzleCanvas.getBoundingClientRect();
+                const x = (coords.x - rect.left) / zoomLevel; // Use universal coord
+                const y = (coords.y - rect.top) / zoomLevel; // Use universal coord
+                
+                // Calculate new position
+                const firstPiece = pieces.find(p => p.id === draggedGroup.pieceIds[0]);
+                const newX = x - dragOffsetX;
+                const newY = y - dragOffsetY;
+                
+                const dx = newX - firstPiece.currentX;
+                const dy = newY - firstPiece.currentY;
+                
+                // Move entire group
+                draggedGroup.pieceIds.forEach(pieceId => {
+                    const piece = pieces.find(p => p.id === pieceId);
+                    piece.currentX += dx;
+                    piece.currentY += dy;
+                });
+                
+                requestRedraw();
+            }
+        }
+
+        function handleMouseUp(e) {
+            // This handler is universal for mouseup, touchend, and touchcancel
+            
+            if (isPanning) {
+                isPanning = false;
+                puzzleCanvas.style.cursor = 'default';
+            }
+            
+            if (mouseDown && draggedGroup) {
+                // Try to snap pieces in the group to neighbors
+                const snapped = checkForSnapInGroup(draggedGroup);
+                
+                if (snapped) {
+                    // Check for puzzle completion after successful snap
+                    updateProgress();
+                }
+                
+                mouseDown = false;
+                draggedGroup = null;
+                puzzleCanvas.style.cursor = 'default';
+                
+                requestRedraw();
+            }
+        }
+        
+        // --- END OF MOUSE/TOUCH HANDLERS ---
+
+        // Find piece at position
+        function findPieceAtPosition(x, y) {
+            // Check in reverse order (top pieces first)
+            for (let i = pieces.length - 1; i >= 0; i--) {
+                const piece = pieces[i];
+                if (isPieceAtPoint(piece, x, y)) {
+                    return piece;
+                }
+            }
+            return null;
+        }
+        
+        // Check if point is inside piece (simple bounding box)
+        function isPieceAtPoint(piece, x, y) {
+            return x >= piece.currentX && x <= piece.currentX + piece.width &&
+                   y >= piece.currentY && y <= piece.currentY + piece.height;
+        }
+
+        // Check for snap opportunities when group is released
+        function checkForSnapInGroup(group) {
+            let snapped = false;
+            
+            // Check each piece in the group for potential connections
+            for (const pieceId of group.pieceIds) {
+                const piece = pieces.find(p => p.id === pieceId);
+                const snapResult = checkForSnapToNeighbors(piece, group);
+                
+                if (snapResult) {
+                    snapped = true;
+                    // Only snap once per release to avoid multiple snaps
+                    break;
+                }
+            }
+            
+            return snapped;
+        }
+        
+        // Check if a piece can snap to any of its 4 neighbors
+        function checkForSnapToNeighbors(draggedPiece, draggedGroup) {
+            const neighbors = getNeighborPositions(draggedPiece);
+            
+            // --- LOGIC FIX START ---
+            // Calculate a dynamic threshold based on piece size (e.g., 50% of smallest dimension)
+            // This ensures small pieces have a small snap radius, preventing false snaps
+            const dynamicThreshold = Math.min(pieceWidth, pieceHeight) * 0.5; // 50% tolerance
+            // --- LOGIC FIX END ---
+
+            for (const neighbor of neighbors) {
+                const neighborPiece = findPieceByGridPosition(neighbor.row, neighbor.col);
+                
+                // Skip if no neighbor exists or if already in same group
+                if (!neighborPiece) continue;
+                
+                const neighborGroup = groups.find(g => g.pieceIds.includes(neighborPiece.id));
+                if (neighborGroup && neighborGroup.id === draggedGroup.id) continue;
+                
+                // Calculate expected position if pieces were connected
+                const expectedX = neighborPiece.currentX + (draggedPiece.correctCol - neighborPiece.correctCol) * pieceWidth;
+                const expectedY = neighborPiece.currentY + (draggedPiece.correctRow - neighborPiece.correctRow) * pieceHeight;
+                
+                // Calculate distance from expected position
+                const distance = Math.sqrt(
+                    Math.pow(draggedPiece.currentX - expectedX, 2) + 
+                    Math.pow(draggedPiece.currentY - expectedY, 2)
+                );
+                
+                // If within DYNAMIC snap threshold, SNAP!
+                if (distance < dynamicThreshold) {
+                    snapPiecesTogetherByGroup(draggedGroup, neighborGroup, draggedPiece, expectedX, expectedY);
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        // Get all neighbor positions (top, right, bottom, left)
+        function getNeighborPositions(piece) {
+            return [
+                {row: piece.correctRow - 1, col: piece.correctCol}, // top
+                {row: piece.correctRow + 1, col: piece.correctCol}, // bottom
+                {row: piece.correctRow, col: piece.correctCol - 1}, // left
+                {row: piece.correctRow, col: piece.correctCol + 1}  // right
+            ];
+        }
+        
+        // Find a piece by its grid position
+        function findPieceByGridPosition(row, col) {
+            return pieces.find(p => p.correctRow === row && p.correctCol === col);
+        }
+        
+        // Snap two groups together
+        function snapPiecesTogetherByGroup(group1, group2, snapPiece, targetX, targetY) {
+            // Calculate offset needed to snap
+            const offsetX = targetX - snapPiece.currentX;
+            const offsetY = targetY - snapPiece.currentY;
+            
+            // Move entire group1 by the snap offset
+            group1.pieceIds.forEach(id => {
+                const p = pieces.find(p => p.id === id);
+                p.currentX += offsetX;
+                p.currentY += offsetY;
+            });
+            
+            // Play thunk sound
+            playClickSound();
+            
+            // Merge the groups
+            if (group2) {
+                mergeGroupsById(group1.id, group2.id);
+            }
+            
+            // Update counter after successful connection
+            updateConnectedCount();
+            updateCounter();
+        }
+        
+        // Merge two groups by ID
+        function mergeGroupsById(groupId1, groupId2) {
+            const group1 = groups.find(g => g.id === groupId1);
+            const group2 = groups.find(g => g.id === groupId2);
+            
+            if (!group1 || !group2 || group1.id === group2.id) return;
+            
+            // Add all pieces from group2 to group1
+            group2.pieceIds.forEach(id => {
+                if (!group1.pieceIds.includes(id)) {
+                    group1.pieceIds.push(id);
+                }
+            });
+            
+            // Remove group2 from groups array
+            const index = groups.findIndex(g => g.id === group2.id);
+            if (index > -1) {
+                groups.splice(index, 1);
+            }
+        }
+        
+        // Legacy function - kept for compatibility but no longer used
+        function checkAndMergeGroups(piece) {
+            // This function is replaced by the new snap mechanism
+            // Keeping it here to avoid references
+        }
+        
+        // Get neighbor pieces (top, right, bottom, left)
+        function getNeighborPieces(piece) {
+            const neighbors = [];
+            const { correctRow, correctCol } = piece;
+            
+            // Top
+            if (correctRow > 0) {
+                const neighbor = pieces.find(p => p.correctRow === correctRow - 1 && p.correctCol === correctCol);
+                if (neighbor) neighbors.push(neighbor);
+            }
+            // Right
+            if (correctCol < gridCols - 1) {
+                const neighbor = pieces.find(p => p.correctRow === correctRow && p.correctCol === correctCol + 1);
+                if (neighbor) neighbors.push(neighbor);
+            }
+            // Bottom
+            if (correctRow < gridRows - 1) {
+                const neighbor = pieces.find(p => p.correctRow === correctRow + 1 && p.correctCol === correctCol);
+                if (neighbor) neighbors.push(neighbor);
+            }
+            // Left
+            if (correctCol > 0) {
+                const neighbor = pieces.find(p => p.correctRow === correctRow && p.correctCol === correctCol - 1);
+                if (neighbor) neighbors.push(neighbor);
+            }
+            
+            return neighbors;
+        }
+        
+        // Merge two groups
+        function mergeGroups(group1, group2) {
+            // Add all pieces from group2 to group1
+            group2.pieceIds.forEach(id => {
+                if (!group1.pieceIds.includes(id)) {
+                    group1.pieceIds.push(id);
+                }
+            });
+            
+            // Remove group2 from groups array
+            const index = groups.findIndex(g => g.id === group2.id);
+            if (index > -1) {
+                groups.splice(index, 1);
+            }
+        }
+        
+        // Play satisfying THUNK sound when pieces connect
+        function playClickSound() {
+            // Initialize audio context if needed
+            if (!audioContext) {
+                initAudio();
+            }
+            
+            if (!audioContext) {
+                console.log('Audio context not available');
+                return;
+            }
+            
+            // Resume context if suspended (browser autoplay policy)
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            
+            try {
+                const now = audioContext.currentTime;
+                
+                // Create bass oscillator for deep thunk
+                const bassOsc = audioContext.createOscillator();
+                const bassGain = audioContext.createGain();
+                const filter = audioContext.createBiquadFilter();
+                
+                // Connect bass path
+                bassOsc.connect(filter);
+                filter.connect(bassGain);
+                bassGain.connect(audioContext.destination);
+                
+                // Bass thunk: 80Hz triangle wave
+                bassOsc.type = 'triangle';
+                bassOsc.frequency.value = 80;
+                
+                // Low-pass filter for muffled sound
+                filter.type = 'lowpass';
+                filter.frequency.value = 400;
+                
+                // Bass envelope: quick attack, medium decay
+                bassGain.gain.setValueAtTime(0.4, now);
+                bassGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                
+                // Start and stop
+                bassOsc.start(now);
+                bassOsc.stop(now + 0.15);
+                
+                // Add noise burst for texture
+                const bufferSize = Math.floor(audioContext.sampleRate * 0.05);
+                const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+                const data = buffer.getChannelData(0);
+                
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * 0.1;
+                }
+                
+                const noise = audioContext.createBufferSource();
+                const noiseGain = audioContext.createGain();
+                const noiseFilter = audioContext.createBiquadFilter();
+                
+                noise.buffer = buffer;
+                noise.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(audioContext.destination);
+                
+                noiseFilter.type = 'lowpass';
+                noiseFilter.frequency.value = 600;
+                
+                noiseGain.gain.setValueAtTime(0.3, now);
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                
+                noise.start(now);
+                
+                console.log('Thunk sound played');
+            } catch (e) {
+                console.error('Error playing sound:', e);
+            }
+        }
+
+        // Timer functions
+        function startTimer() {
+            startTime = Date.now() - elapsedTime;
+            timerInterval = setInterval(updateTimer, 100);
+        }
+
+        function updateTimer() {
+            if (!isPaused) {
+                elapsedTime = Date.now() - startTime;
+                displayTime(elapsedTime);
+            }
+        }
+
+        function displayTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            
+            let timeString = '';
+            if (hours > 0) {
+                timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            document.getElementById('timer').textContent = timeString;
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            const pauseBtn = document.getElementById('pauseBtn');
+            const overlay = document.getElementById('pauseOverlay');
+            
+            if (isPaused) {
+                pauseBtn.textContent = 'Resume';
+                overlay.classList.add('active');
+            } else {
+                pauseBtn.textContent = 'Pause';
+                overlay.classList.remove('active');
+                startTime = Date.now() - elapsedTime;
+            }
+        }
+
+        // Handle zoom change
+        function handleZoomChange(e) {
+            zoomLevel = parseInt(e.target.value) / 100;
+            document.getElementById('zoomValue').textContent = e.target.value + '%';
+            const board = document.getElementById('puzzleBoard');
+            board.style.transform = `scale(${zoomLevel})`;
+            
+            // Recalculate board dimensions to ensure it stays infinite at new zoom level
+            calculateBoardDimensions(); // Fixed typo
+            if (pieces.length > 0) {
+                cachePieceImages();
+            }
+            requestRedraw();
+        }
+
+        // **** BACKGROUND HANDLER ****
+        function handleBackgroundChange(e) {
+            const newColor = e.target.value;
+            const boardContainer = document.querySelector('.board-container');
+            // If the value is "" (which shouldn't happen now, but just in case),
+            // or if it's the explicit white value, set it to white (reverting to CSS default).
+            // Otherwise, set the new solid color.
+            if (newColor === "" || newColor === "#FFFFFF") {
+                 boardContainer.style.background = ""; // Revert to CSS definition (now white)
+            } else {
+                boardContainer.style.background = newColor; // Apply solid color
+            }
+            // **Important:** Request redraw to show the change immediately if pieces cover the bg
+            requestRedraw(); 
+        }
+        
+        // Show preview modal
+        function showPreview() {
+            const modal = document.getElementById('previewModal');
+            const img = document.getElementById('previewImage');
+            img.src = uploadedImage.src;
+            modal.classList.add('active');
+        }
+        
+        // Close preview modal
+        function closePreview() {
+            const modal = document.getElementById('previewModal');
+            modal.classList.remove('active');
+        }
+        
+        // Update counter display
+        function updateCounter() {
+            // Update the text to show the *actual* total number of pieces
+            document.getElementById('progress').textContent = `${connectedPiecesCount} / ${totalPieces} pieces connected`;
+            
+            // Check if puzzle is complete
+            if (connectedPiecesCount > 0 && connectedPiecesCount === totalPieces && !isPaused) {
+                completePuzzle();
+            }
+        }
+        
+        // Calculate how many pieces are connected
+        function updateConnectedCount() {
+            const processedGroups = new Set();
+            connectedPiecesCount = 0;
+            
+            pieces.forEach(piece => {
+                const group = groups.find(g => g.pieceIds.includes(piece.id));
+                if (group && group.pieceIds.length > 1) {
+                    // This piece is part of a connected group
+                    const groupId = group.id;
+                    
+                    if (!processedGroups.has(groupId)) {
+                        processedGroups.add(groupId);
+                        connectedPiecesCount += group.pieceIds.length;
+                    }
+                }
+            });
+            
+            // If there's only one group left, and it contains all pieces, that means it's complete.
+            // This catches the case where the last two pieces connect.
+            if (groups.length === 1 && groups[0].pieceIds.length === totalPieces) {
+                 connectedPiecesCount = totalPieces;
+            }
+        }
+        
+        // Update progress display
+        function updateProgress() {
+            updateConnectedCount();
+            updateCounter();
+        }
+
+        // Complete puzzle
+        function completePuzzle() {
+            gameState = 'completed';
+            clearInterval(timerInterval);
+            
+            // Show completion screen
+            setTimeout(() => {
+                document.getElementById('gameScreen').classList.remove('active');
+                document.getElementById('completionScreen').classList.add('active');
+                
+                // Display final time
+                document.getElementById('finalTime').textContent = document.getElementById('timer').textContent;
+                
+                // Display completed image
+                const completionImg = document.createElement('img');
+                completionImg.src = uploadedImage.src;
+                const completionImageDiv = document.getElementById('completionImage');
+                completionImageDiv.innerHTML = '';
+                completionImageDiv.appendChild(completionImg);
+            }, 500);
+        }
+
+        // Reset game
+        function resetGame() {
+            gameState = 'setup';
+            uploadedImage = null;
+            pieces = [];
+            groups = [];
+            draggedGroup = null;
+            elapsedTime = 0;
+            isPaused = false;
+            zoomLevel = 1.0;
+            totalPieces = 0; // Reset total
+            connectedPiecesCount = 0; // Reset connected
+            
+            clearInterval(timerInterval);
+            
+            // Reset container class
+            const container = document.getElementById('mainContainer');
+            container.classList.remove('game-container');
+            container.classList.add('setup-container');
+            
+            // Reset UI
+            document.getElementById('imageUpload').value = '';
+            document.getElementById('imagePreview').innerHTML = '';
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('pauseBtn').textContent = 'Pause';
+            document.getElementById('pauseOverlay').classList.remove('active');
+            document.getElementById('pieceSlider').value = 100;
+            document.getElementById('sliderValue').textContent = '100';
+            document.getElementById('zoomSlider').value = 100;
+            document.getElementById('zoomValue').textContent = '100%';
+            document.getElementById('progress').textContent = '0 / 0 pieces connected'; // Reset progress text
+            numPieces = 100;
+            
+            // **** RESET BACKGROUND DROPDOWN ****
+            document.getElementById('bgSelect').value = "#FFFFFF"; // Set dropdown to "Default White"
+            document.querySelector('.board-container').style.background = ""; // Clear inline style to revert to CSS (now white)
+            
+            const board = document.getElementById('puzzleBoard');
+            board.style.transform = 'scale(1)';
+            
+            // Hide preview thumbnail
+            document.getElementById('previewThumbnail').classList.remove('active');
+            
+            // Switch to setup screen
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('completionScreen').classList.remove('active');
+            document.getElementById('setupScreen').classList.add('active');
+        }
+    </script>
+</body>
+</html>
+
