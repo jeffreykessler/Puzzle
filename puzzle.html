@@ -1110,28 +1110,29 @@
             createJigsawPathOnContext(ctx, piece, drawX, drawY);
             ctx.clip();
             
-            // Inner shadow (bottom/right edges)
-            ctx.beginPath();
-            createJigsawPathOnContext(ctx, piece, drawX + 1.5, drawY + 1.5);
-            ctx.lineWidth = 3;
-            ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
-            ctx.stroke();
-            
             // Inner highlight (top/left edges)
             ctx.beginPath();
-            createJigsawPathOnContext(ctx, piece, drawX - 1.5, drawY - 1.5);
-            ctx.lineWidth = 3;
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+            createJigsawPathOnContext(ctx, piece, drawX + 1.5, drawY + 1.5);
+            ctx.lineWidth = 3.5;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
             ctx.stroke();
             
-            // Thin seal border
+            // Inner shadow (bottom/right edges)
             ctx.beginPath();
-            createJigsawPathOnContext(ctx, piece, drawX, drawY);
-            ctx.lineWidth = 1;
+            createJigsawPathOnContext(ctx, piece, drawX - 1.5, drawY - 1.5);
+            ctx.lineWidth = 3.5;
             ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
             ctx.stroke();
             
             ctx.restore();
+            
+            // 4. Draw Seal Border (UNCLIPPED)
+            // This hides the subpixel gaps/blurriness between adjacent puzzle pieces.
+            ctx.beginPath();
+            createJigsawPathOnContext(ctx, piece, drawX, drawY);
+            ctx.lineWidth = 1.2;
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.stroke();
             
             // Store in cache
             pieceImageCache.set(piece.id, offscreen);
