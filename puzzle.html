@@ -1061,15 +1061,30 @@
         }
         
         function cachePieceImage(piece) {
-            const tabMargin = Math.min(piece.width, piece.height) * TAB_SIZE;
+            const padding = 8; // Extra padding for the drop shadow
+            const tabMargin = Math.min(piece.width, piece.height) * TAB_SIZE * 1.5; // Increased margin for larger tabs
             const offscreen = document.createElement('canvas');
-            offscreen.width = piece.width + (tabMargin * 2);
-            offscreen.height = piece.height + (tabMargin * 2);
+            offscreen.width = piece.width + (tabMargin * 2) + (padding * 2);
+            offscreen.height = piece.height + (tabMargin * 2) + (padding * 2);
             const ctx = offscreen.getContext('2d');
             
-            // Create piece path
+            const drawX = tabMargin + padding;
+            const drawY = tabMargin + padding;
+            
+            // 1. Draw Drop Shadow
             ctx.save();
-            createJigsawPathOnContext(ctx, piece, tabMargin, tabMargin);
+            createJigsawPathOnContext(ctx, piece, drawX, drawY);
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 3;
+            ctx.fillStyle = 'black';
+            ctx.fill();
+            ctx.restore();
+            
+            // 2. Clip Path
+            ctx.save();
+            createJigsawPathOnContext(ctx, piece, drawX, drawY);
             ctx.clip();
             
             // Draw image on cached canvas
@@ -1085,20 +1100,38 @@
                 Math.max(0, srcX), Math.max(0, srcY),
                 Math.min(srcWidth, uploadedImage.width - Math.max(0, srcX)),
                 Math.min(srcHeight, uploadedImage.height - Math.max(0, srcY)),
-                0, 0, offscreen.width, offscreen.height
+                padding, padding, piece.width + (tabMargin * 2), piece.height + (tabMargin * 2)
             );
             
             ctx.restore();
             
-            // --- SHADOWS REMOVED ---
-            // Draw a simple, performant border
+            // 3. Draw Bevel/Emboss Effects
             ctx.save();
-            createJigsawPathOnContext(ctx, piece, tabMargin, tabMargin);
-            ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)'; // Keep the main dark border
-            ctx.lineWidth = 2.5;
+            createJigsawPathOnContext(ctx, piece, drawX, drawY);
+            ctx.clip();
+            
+            // Inner shadow (bottom/right edges)
+            ctx.beginPath();
+            createJigsawPathOnContext(ctx, piece, drawX + 1.5, drawY + 1.5);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
             ctx.stroke();
+            
+            // Inner highlight (top/left edges)
+            ctx.beginPath();
+            createJigsawPathOnContext(ctx, piece, drawX - 1.5, drawY - 1.5);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.stroke();
+            
+            // Thin seal border
+            ctx.beginPath();
+            createJigsawPathOnContext(ctx, piece, drawX, drawY);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.stroke();
+            
             ctx.restore();
-            // --- END OF BORDER ---
             
             // Store in cache
             pieceImageCache.set(piece.id, offscreen);
@@ -1142,8 +1175,9 @@
         function drawCachedPiece(piece, x, y) {
             const cached = pieceImageCache.get(piece.id);
             if (cached) {
-                const tabMargin = Math.min(piece.width, piece.height) * TAB_SIZE;
-                puzzleCtx.drawImage(cached, x - tabMargin, y - tabMargin);
+                const padding = 8;
+                const tabMargin = Math.min(piece.width, piece.height) * TAB_SIZE * 1.5;
+                puzzleCtx.drawImage(cached, x - tabMargin - padding, y - tabMargin - padding);
             } else {
                 // Fallback to drawing piece directly
                 drawPiece(piece, x, y);
@@ -1161,7 +1195,7 @@
             puzzleCtx.clip();
             
             // Calculate source position WITH MARGIN FOR TABS/CUPS
-            const tabMargin = Math.min(piece.width, piece.height) * TAB_SIZE;
+            const tabMargin = Math.min(piece.width, piece.height) * TAB_SIZE * 1.5;
             
             const srcPieceWidth = uploadedImage.width / gridCols;
             const srcPieceHeight = uploadedImage.height / gridRows;
@@ -1189,15 +1223,13 @@
             
             puzzleCtx.restore();
             
-            // --- SHADOWS REMOVED (fallback) ---
             // Draw a simple, performant border
             puzzleCtx.save();
             createJigsawPath(piece, x, y);
-            puzzleCtx.strokeStyle = 'rgba(0, 0, 0, 0.7)'; // Keep the main dark border
-            puzzleCtx.lineWidth = 2.5;
+            puzzleCtx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+            puzzleCtx.lineWidth = 1;
             puzzleCtx.stroke();
             puzzleCtx.restore();
-            // --- END OF BORDER ---
         }
         
         // Create jigsaw path on the main canvas context
@@ -1205,152 +1237,72 @@
             createJigsawPathOnContext(puzzleCtx, piece, x, y);
         }
         
-        // Create authentic jigsaw piece path with consistent size, varied position
+        // Helper function to draw a single organic edge
+        function drawJigsawEdge(ctx, startX, startY, length, angle, tabDir, offsetPct, tabSize) {
+            ctx.save();
+            ctx.translate(startX, startY);
+            ctx.rotate(angle);
+            
+            if (tabDir === 0) {
+                ctx.lineTo(length, 0);
+            } else {
+                const midX = length * (0.5 + offsetPct);
+                const neckWidth = tabSize * 0.35; // Tighter pinched neck
+                const headW = tabSize * 0.75; // Bulbous round head
+                const h = tabDir * tabSize; // Tabs direction outward = negative
+                
+                // Wavy line to neck
+                ctx.bezierCurveTo(
+                    (midX - neckWidth) * 0.3, tabDir * length * 0.04,
+                    (midX - neckWidth) * 0.7, -tabDir * length * 0.04,
+                    midX - neckWidth, 0
+                );
+                
+                // Left side of tab
+                ctx.bezierCurveTo(
+                    midX - neckWidth, h * 0.3,
+                    midX - headW, h * 0.1,
+                    midX - headW, h * 0.5
+                );
+                
+                // Top of tab
+                ctx.bezierCurveTo(
+                    midX - headW, h * 1.1,
+                    midX + headW, h * 1.1,
+                    midX + headW, h * 0.5
+                );
+                
+                // Right side of tab
+                ctx.bezierCurveTo(
+                    midX + headW, h * 0.1,
+                    midX + neckWidth, h * 0.3,
+                    midX + neckWidth, 0
+                );
+                
+                // Wavy line to end
+                const rem = length - (midX + neckWidth);
+                ctx.bezierCurveTo(
+                    (midX + neckWidth) + rem * 0.3, -tabDir * length * 0.04,
+                    (midX + neckWidth) + rem * 0.7, tabDir * length * 0.04,
+                    length, 0
+                );
+            }
+            
+            ctx.restore();
+        }
+        
         function createJigsawPathOnContext(ctx, piece, x, y) {
             const { width, height, tabs } = piece;
-            const tabSize = Math.min(width, height) * TAB_SIZE; // CONSISTENT SIZE
-            const neckWidth = tabSize * 0.5; // Width of tab neck
+            const tabSize = Math.min(width, height) * TAB_SIZE;
             
             ctx.beginPath();
-            
-            // Start at top-left corner
             ctx.moveTo(x, y);
             
-            // Top edge with rounded tab/cup
-            if (tabs.top === 0) {
-                ctx.lineTo(x + width, y);
-            } else {
-                const offset = getPieceTabOffset(piece, 'top');
-                const midX = x + width * (0.5 + offset); // Position varies
-                const dir = tabs.top > 0 ? -1 : 1;
-                
-                ctx.lineTo(midX - neckWidth, y);
-                
-                ctx.bezierCurveTo(
-                    midX - neckWidth, y,
-                    midX - tabSize * 0.8, y + dir * tabSize * 0.3,
-                    midX - tabSize * 0.7, y + dir * tabSize * 0.6
-                );
-                ctx.bezierCurveTo(
-                    midX - tabSize * 0.5, y + dir * tabSize * 0.85,
-                    midX - tabSize * 0.2, y + dir * tabSize,
-                    midX, y + dir * tabSize
-                );
-                ctx.bezierCurveTo(
-                    midX + tabSize * 0.2, y + dir * tabSize,
-                    midX + tabSize * 0.5, y + dir * tabSize * 0.85,
-                    midX + tabSize * 0.7, y + dir * tabSize * 0.6
-                );
-                ctx.bezierCurveTo(
-                    midX + tabSize * 0.8, y + dir * tabSize * 0.3,
-                    midX + neckWidth, y,
-                    midX + neckWidth, y
-                );
-                
-                ctx.lineTo(x + width, y);
-            }
-            
-            // Right edge with rounded tab/cup
-            if (tabs.right === 0) {
-                ctx.lineTo(x + width, y + height);
-            } else {
-                const offset = getPieceTabOffset(piece, 'right');
-                const midY = y + height * (0.5 + offset); // Position varies
-                const dir = tabs.right > 0 ? 1 : -1;
-                
-                ctx.lineTo(x + width, midY - neckWidth);
-                
-                ctx.bezierCurveTo(
-                    x + width, midY - neckWidth,
-                    x + width + dir * tabSize * 0.3, midY - tabSize * 0.8,
-                    x + width + dir * tabSize * 0.6, midY - tabSize * 0.7
-                );
-                ctx.bezierCurveTo(
-                    x + width + dir * tabSize * 0.85, midY - tabSize * 0.5,
-                    x + width + dir * tabSize, midY - tabSize * 0.2,
-                    x + width + dir * tabSize, midY
-                );
-                ctx.bezierCurveTo(
-                    x + width + dir * tabSize, midY + tabSize * 0.2,
-                    x + width + dir * tabSize * 0.85, midY + tabSize * 0.5,
-                    x + width + dir * tabSize * 0.6, midY + tabSize * 0.7
-                );
-                ctx.bezierCurveTo(
-                    x + width + dir * tabSize * 0.3, midY + tabSize * 0.8,
-                    x + width, midY + neckWidth,
-                    x + width, midY + neckWidth
-                );
-                
-                ctx.lineTo(x + width, y + height);
-            }
-            
-            // Bottom edge with rounded tab/cup
-            if (tabs.bottom === 0) {
-                ctx.lineTo(x, y + height);
-            } else {
-                const offset = getPieceTabOffset(piece, 'bottom');
-                const midX = x + width * (0.5 + offset); // Position varies
-                const dir = tabs.bottom > 0 ? 1 : -1;
-                
-                ctx.lineTo(midX + neckWidth, y + height);
-                
-                ctx.bezierCurveTo(
-                    midX + neckWidth, y + height,
-                    midX + tabSize * 0.8, y + height + dir * tabSize * 0.3,
-                    midX + tabSize * 0.7, y + height + dir * tabSize * 0.6
-                );
-                ctx.bezierCurveTo(
-                    midX + tabSize * 0.5, y + height + dir * tabSize * 0.85,
-                    midX + tabSize * 0.2, y + height + dir * tabSize,
-                    midX, y + height + dir * tabSize
-                );
-                ctx.bezierCurveTo(
-                    midX - tabSize * 0.2, y + height + dir * tabSize,
-                    midX - tabSize * 0.5, y + height + dir * tabSize * 0.85,
-                    midX - tabSize * 0.7, y + height + dir * tabSize * 0.6
-                );
-                ctx.bezierCurveTo(
-                    midX - tabSize * 0.8, y + height + dir * tabSize * 0.3,
-                    midX - neckWidth, y + height,
-                    midX - neckWidth, y + height
-                );
-                
-                ctx.lineTo(x, y + height);
-            }
-            
-            // Left edge with rounded tab/cup
-            if (tabs.left === 0) {
-                ctx.lineTo(x, y);
-            } else {
-                const offset = getPieceTabOffset(piece, 'left');
-                const midY = y + height * (0.5 + offset); // Position varies
-                const dir = tabs.left > 0 ? -1 : 1;
-                
-                ctx.lineTo(x, midY + neckWidth);
-                
-                ctx.bezierCurveTo(
-                    x, midY + neckWidth,
-                    x + dir * tabSize * 0.3, midY + tabSize * 0.8,
-                    x + dir * tabSize * 0.6, midY + tabSize * 0.7
-                );
-                ctx.bezierCurveTo(
-                    x + dir * tabSize * 0.85, midY + tabSize * 0.5,
-                    x + dir * tabSize, midY + tabSize * 0.2,
-                    x + dir * tabSize, midY
-                );
-                ctx.bezierCurveTo(
-                    x + dir * tabSize, midY - tabSize * 0.2,
-                    x + dir * tabSize * 0.85, midY - tabSize * 0.5,
-                    x + dir * tabSize * 0.6, midY - tabSize * 0.7
-                );
-                ctx.bezierCurveTo(
-                    x + dir * tabSize * 0.3, midY - tabSize * 0.8,
-                    x, midY - neckWidth,
-                    x, midY - neckWidth
-                );
-                
-                ctx.lineTo(x, y);
-            }
+            // Using transformations makes complex Bezier calculation perfectly symmetrical and highly robust
+            drawJigsawEdge(ctx, x, y, width, 0, -tabs.top, getPieceTabOffset(piece, 'top'), tabSize);
+            drawJigsawEdge(ctx, x + width, y, height, Math.PI / 2, -tabs.right, getPieceTabOffset(piece, 'right'), tabSize);
+            drawJigsawEdge(ctx, x + width, y + height, width, Math.PI, -tabs.bottom, -getPieceTabOffset(piece, 'bottom'), tabSize);
+            drawJigsawEdge(ctx, x, y + height, height, Math.PI * 1.5, -tabs.left, -getPieceTabOffset(piece, 'left'), tabSize);
             
             ctx.closePath();
         }
